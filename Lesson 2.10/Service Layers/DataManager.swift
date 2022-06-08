@@ -20,6 +20,5 @@ class DataManager {
         URLQueryItem(name: "hours", value: "false"),
         URLQueryItem(name: "extra", value: "true"),
     ]
-    
     private init () {}
 }

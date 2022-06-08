@@ -42,7 +42,7 @@ extension WeatherViewController {
             case .success(let yandexWeather):
                 self.setUI(from: yandexWeather)
             case .failure(let error):
-                self.showAlert(with: error.localizedDescription)
+                self.showAlert(with: "\(error)")
             }
         }
 

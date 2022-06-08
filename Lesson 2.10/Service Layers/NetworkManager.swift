@@ -7,14 +7,20 @@
 
 import UIKit
 
+enum NetworkError: Error {
+    case invalidURL
+    case noData
+    case decodingError
+}
+
 class NetworkManager {
     static let shared = NetworkManager()
     
-    typealias Handler = (Result<YandexWeather, Error>) -> Void
+    typealias Handler = (Result<YandexWeather, NetworkError>) -> Void
     
-    init() {}
+    private init() {}
     
-    func fetchWeather(handler: @escaping Handler)  {
+    func fetchWeather(completion: @escaping Handler)  {
         let urlWeather = DataManager.shared.urlWeather
         let urlWeatherParameters = DataManager.shared.urlWeatherParameters
         let keyAPI = DataManager.shared.keyAPI
@@ -22,23 +28,26 @@ class NetworkManager {
         guard var urlComponents = URLComponents(string: urlWeather) else { return }
         urlComponents.queryItems = urlWeatherParameters
         
-        guard let url = urlComponents.url else { return }
+        guard let url = urlComponents.url else {
+            completion(.failure(.invalidURL))
+            return
+        }
         
         var urlRequest = URLRequest(url: url)
         urlRequest.setValue(keyAPI.first?.value ?? "", forHTTPHeaderField: keyAPI.first?.key ?? "")
         
         URLSession.shared.dataTask(with: urlRequest) { data, _, error in
             guard let data = data else {
-                handler(.failure(error!))
+                completion(.failure(.noData))
                 return
             }
             do {
                 let yandexWeather = try JSONDecoder().decode(YandexWeather.self, from: data)
                 DispatchQueue.main.async {
-                    handler(.success(yandexWeather))
+                    completion(.success(yandexWeather))
                 }
             } catch {
-                handler(.failure(error))
+                completion(.failure(.decodingError))
             }
         }.resume()
     }
